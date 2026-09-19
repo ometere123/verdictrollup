@@ -61,7 +61,7 @@ def raw_batch(second_result="APPROVED"):
 
 def create_batch(vm, deploy, raw=None, operator_bond=OPERATOR_BOND, challenge_bond=CHALLENGE_BOND, period=CHALLENGE_PERIOD):
     vm.warp(BASE_ISO)
-    contract = deploy(CONTRACT)
+    contract = deploy(CONTRACT, sdk_version="v0.2.16")
     manifest = build(raw or raw_batch())
     vm.value = operator_bond
     batch_id = contract.create_batch(

@@ -24,4 +24,6 @@ jobs:
       - name: Direct Mode
         run: pytest tests/direct -v
       - name: GenVM lint
+        env:
+          GENVM_VERSION: v0.2.16
         run: genvm-lint check contracts/verdictrollup.py
