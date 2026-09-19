@@ -1,0 +1,73 @@
+{
+  "format": "verdictrollup-manifest-v1",
+  "title": "Production approval demo",
+  "decision_rule": "Classify the named release as APPROVED only when the source explicitly states that it is approved for production deployment. Classify it as REJECTED only when the source explicitly states that it is rejected or blocked for production deployment. Otherwise classify it as UNRESOLVED.",
+  "result_labels": [
+    "APPROVED",
+    "REJECTED",
+    "UNRESOLVED"
+  ],
+  "result_labels_json": "[\"APPROVED\",\"REJECTED\",\"UNRESOLVED\"]",
+  "schema_hash": "adc5661ea207254addfaa09b6fbbdeb325f02bcb46a32d3e21cc18e2b9da30a3",
+  "merkle_root": "e46676e2a49441e0c702a964cd9537249f44bf73cea92d1765620ef533faccc5",
+  "leaf_count": 3,
+  "leaves": [
+    {
+      "index": 0,
+      "question": "What is the production deployment decision for Project Aurora release 2026.09?",
+      "context": "Project Aurora release 2026.09",
+      "source_url": "https://raw.githubusercontent.com/ometere123/verdictrollup/main/fixtures/approved.txt",
+      "proposed_result": "APPROVED",
+      "leaf_hash": "70472372fe181f1976893baf748effbfa68e1e9c302f8c99735e53420aed9bd2",
+      "proof": [
+        {
+          "side": "R",
+          "hash": "f02c83aa3fb82df32d1e43604b5a39397cfe375614731f9842577503b102f003"
+        },
+        {
+          "side": "R",
+          "hash": "b1e24d39ad92afde27ce15e1eab73ed624de97ca07bb1b1ef7a7b17f003fb682"
+        }
+      ],
+      "proof_json": "[{\"side\":\"R\",\"hash\":\"f02c83aa3fb82df32d1e43604b5a39397cfe375614731f9842577503b102f003\"},{\"side\":\"R\",\"hash\":\"b1e24d39ad92afde27ce15e1eab73ed624de97ca07bb1b1ef7a7b17f003fb682\"}]"
+    },
+    {
+      "index": 1,
+      "question": "What is the production deployment decision for Project Borealis release 2026.09?",
+      "context": "Project Borealis release 2026.09",
+      "source_url": "https://raw.githubusercontent.com/ometere123/verdictrollup/main/fixtures/rejected.txt",
+      "proposed_result": "APPROVED",
+      "leaf_hash": "f02c83aa3fb82df32d1e43604b5a39397cfe375614731f9842577503b102f003",
+      "proof": [
+        {
+          "side": "L",
+          "hash": "70472372fe181f1976893baf748effbfa68e1e9c302f8c99735e53420aed9bd2"
+        },
+        {
+          "side": "R",
+          "hash": "b1e24d39ad92afde27ce15e1eab73ed624de97ca07bb1b1ef7a7b17f003fb682"
+        }
+      ],
+      "proof_json": "[{\"side\":\"L\",\"hash\":\"70472372fe181f1976893baf748effbfa68e1e9c302f8c99735e53420aed9bd2\"},{\"side\":\"R\",\"hash\":\"b1e24d39ad92afde27ce15e1eab73ed624de97ca07bb1b1ef7a7b17f003fb682\"}]"
+    },
+    {
+      "index": 2,
+      "question": "What is the production deployment decision for Project Cygnus release 2026.09?",
+      "context": "Project Cygnus release 2026.09",
+      "source_url": "https://raw.githubusercontent.com/ometere123/verdictrollup/main/fixtures/unresolved.txt",
+      "proposed_result": "UNRESOLVED",
+      "leaf_hash": "ccd5210e1dbbcb426099010b82638619a8add1758c4768ab1e34bff8f2b8a207",
+      "proof": [
+        {
+          "side": "R",
+          "hash": "ccd5210e1dbbcb426099010b82638619a8add1758c4768ab1e34bff8f2b8a207"
+        },
+        {
+          "side": "L",
+          "hash": "cf99149403bfd98a6fb767c855013430790f1508882570390d68fe4460ddd4bc"
+        }
+      ],
+      "proof_json": "[{\"side\":\"R\",\"hash\":\"ccd5210e1dbbcb426099010b82638619a8add1758c4768ab1e34bff8f2b8a207\"},{\"side\":\"L\",\"hash\":\"cf99149403bfd98a6fb767c855013430790f1508882570390d68fe4460ddd4bc\"}]"
+    }
+  ]
+}

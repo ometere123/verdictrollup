@@ -1,0 +1,27 @@
+name: verdictrollup-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  direct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test tooling
+        run: pip install -r requirements.txt
+      - name: Dependency-free protocol checks
+        run: |
+          python scripts/merkle.py
+          python scripts/verify_manifest.py fixtures/demo_batch_manifest.json
+          python scripts/preflight.py
+          python -m compileall contracts tests examples scripts
+      - name: Direct Mode
+        run: pytest tests/direct -v
+      - name: GenVM lint
+        run: genvm-lint check contracts/verdictrollup.py

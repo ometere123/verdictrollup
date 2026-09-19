@@ -1,0 +1,25 @@
+{
+  "title": "Production approval demo",
+  "decision_rule": "Classify the named release as APPROVED only when the source explicitly states that it is approved for production deployment. Classify it as REJECTED only when the source explicitly states that it is rejected or blocked for production deployment. Otherwise classify it as UNRESOLVED.",
+  "result_labels": ["APPROVED", "REJECTED", "UNRESOLVED"],
+  "leaves": [
+    {
+      "question": "What is the production deployment decision for Project Aurora release 2026.09?",
+      "context": "Project Aurora release 2026.09",
+      "source_url": "https://raw.githubusercontent.com/ometere123/verdictrollup/main/fixtures/approved.txt",
+      "proposed_result": "APPROVED"
+    },
+    {
+      "question": "What is the production deployment decision for Project Borealis release 2026.09?",
+      "context": "Project Borealis release 2026.09",
+      "source_url": "https://raw.githubusercontent.com/ometere123/verdictrollup/main/fixtures/rejected.txt",
+      "proposed_result": "APPROVED"
+    },
+    {
+      "question": "What is the production deployment decision for Project Cygnus release 2026.09?",
+      "context": "Project Cygnus release 2026.09",
+      "source_url": "https://raw.githubusercontent.com/ometere123/verdictrollup/main/fixtures/unresolved.txt",
+      "proposed_result": "UNRESOLVED"
+    }
+  ]
+}

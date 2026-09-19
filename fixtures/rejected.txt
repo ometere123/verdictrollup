@@ -1,0 +1,4 @@
+VerdictRollup demonstration bulletin
+
+Project Borealis release 2026.09 is REJECTED for production deployment because required recovery testing is incomplete.
+This fictional fixture exists only to demonstrate a fraud challenge.

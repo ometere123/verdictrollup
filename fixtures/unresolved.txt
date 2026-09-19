@@ -1,0 +1,3 @@
+VerdictRollup demonstration bulletin
+
+Project Cygnus release 2026.09 completed routine review. No production approval or rejection decision is stated in this bulletin.
