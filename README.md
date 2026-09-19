@@ -300,3 +300,11 @@ DEPLOYMENT.md                           canonical deployment evidence record
 ## Scope
 
 VerdictRollup is an optimistic semantic decision primitive. It is not a generic data-availability layer, a validity rollup, a frontend product, a prediction market, a dispute application, or an escrow. Its narrow job is to let many publicly inspectable semantic decisions share one bonded commitment while preserving a permissionless path for a single committed leaf to trigger full GenLayer consensus and invalidate a fraudulent batch.
+
+## Live Studionet evidence
+
+The canonical deployment and live batch/challenge readbacks are recorded in [docs/STUDIONET_LIVE_EVIDENCE.md](docs/STUDIONET_LIVE_EVIDENCE.md). The contract is deployed on Studionet chain `61999` at [`0x0d921292939A28d41d9BE4a304b725dcd3A76af0`](https://explorer-studio.genlayer.com/address/0x0d921292939A28d41d9BE4a304b725dcd3A76af0). The demo proves a finalized `FRAUD_PROVEN` challenge invalidates batch 1 and credits the challenger, and an honest batch 2 reaches `FINALIZED` after its challenge window.
+
+**Live-read limitation:** the current Studionet RPC rejects the eight-argument `is_final_leaf` view with an RLP surplus-bytes error through both CLI and Python SDK. This return is not claimed as live evidence; details and successful adjacent readbacks are documented in the evidence record.
+
+No frontend has been added.

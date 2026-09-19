@@ -62,4 +62,6 @@ Submission target: stable GenLayer Studionet, chain ID `61999`, RPC `https://stu
 
 ## Current evidence status
 
-Repository code, deterministic fixtures, off-chain Merkle tooling, direct tests, hosted-network tests and live-demo automation are included. `DEPLOYMENT.md` is the only canonical place for live addresses and transaction hashes and must not be populated with guessed or unverified values.
+The contract is live on Studionet 61999. A real bonded adversarial challenge finalized as `FRAUD_PROVEN`, invalidated its batch, and credited the independent challenger. A separate honest batch finalized after its challenge period; membership was verified both before and after finalization. Exact deployment, challenge, finalization transactions and readbacks are in [`docs/STUDIONET_LIVE_EVIDENCE.md`](docs/STUDIONET_LIVE_EVIDENCE.md).
+
+The live RPC currently fails when reading the eight-argument `is_final_leaf` view with an RLP surplus-bytes error. Accordingly, the live `is_final_leaf == true` result is not claimed. See the evidence record for detail.

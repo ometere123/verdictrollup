@@ -18,7 +18,12 @@ def main() -> None:
     request = urllib.request.Request(
         RPC,
         data=payload,
-        headers={"content-type": "application/json"},
+        headers={
+            "content-type": "application/json",
+            "Origin": "https://studio.genlayer.com",
+            "Referer": "https://studio.genlayer.com/",
+            "User-Agent": "VerdictRollup network guard",
+        },
         method="POST",
     )
     try:

@@ -1,5 +1,12 @@
 # VerdictRollup — stable Studionet deployment evidence
 
+> **Current observed live evidence is recorded in [`docs/STUDIONET_LIVE_EVIDENCE.md`](docs/STUDIONET_LIVE_EVIDENCE.md).** The blank fields and "no live deployment" text later in this file are the original pre-deployment template and are superseded by that record. The live contract was deployed on Studionet 61999; this evidence adds no contract changes or redeployment.
+
+Current canonical contract: [`0x0d921292939A28d41d9BE4a304b725dcd3A76af0`](https://explorer-studio.genlayer.com/address/0x0d921292939A28d41d9BE4a304b725dcd3A76af0). Deployment: [`0x64703c09a112f4c4ab447397898bac78b1af6789ce802e94ede04b33784638f1`](https://explorer-studio.genlayer.com/tx/0x64703c09a112f4c4ab447397898bac78b1af6789ce802e94ede04b33784638f1), finalized with successful execution.
+
+The live fraud proof and honest finalization were also verified. The eight-argument `is_final_leaf` read currently fails at the RPC with an RLP surplus-bytes error; see the linked record. Do not infer or claim a successful live return from the batch state alone.
+
+
 ## Canonical target
 
 - Network: GenLayer Studionet
@@ -10,13 +17,13 @@
 
 ## Evidence status
 
-**No live deployment is claimed in this file yet.**
+**Superseded:** this pre-deployment template is retained for historical context only. The live values are in `docs/STUDIONET_LIVE_EVIDENCE.md`.
 
-The repository was built and statically validated in an execution environment that does not have a GenLayer signing wallet or direct outbound Studionet transaction access. Rather than fabricate a contract address, transaction hash or test result, the repository includes `scripts/check_network.py`, `scripts/deploy_studionet.py`, hosted-network integration tests and `scripts/live_fraud_demo.py` so the final signing/deployment run can be performed reproducibly from a funded Studionet environment.
+Historical note: this paragraph described the pre-deployment environment only. The contract has since been deployed and the verified evidence is in `docs/STUDIONET_LIVE_EVIDENCE.md`; live signing and Studionet access were used for the evidence collected there.
 
-When the live run is performed, replace this section with the verified values below.
+The following blank fields are historical template fields and are not current deployment evidence.
 
-## Deployment record to fill from the real run
+## Historical deployment record template
 
 ```text
 Repository commit:
@@ -31,7 +38,7 @@ Execution result:
 
 Verification requirement: record the same complete contract source hash that was deployed and verify the transaction's execution result, not only its outer/finalized status.
 
-## Flagship fraud-proof record to fill
+## Historical flagship fraud-proof record template
 
 The canonical demo manifest root is:
 
@@ -57,7 +64,7 @@ Challenger credit:
 
 The expected proof is `consensus result == REJECTED`, `challenge outcome == FRAUD_PROVEN`, and `batch status == INVALIDATED`. Record those values only after the live state reads confirm them.
 
-## Honest finality record to fill
+## Historical honest-finality record template
 
 Create a separate all-correct batch and record:
 

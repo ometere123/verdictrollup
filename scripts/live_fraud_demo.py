@@ -12,6 +12,7 @@ and challenges the deliberately false second leaf from a different account.
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -36,6 +37,9 @@ def ok(receipt, label: str) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--contract-address", required=True, help="already deployed canonical Studionet contract")
+    args = parser.parse_args()
     check_network()
     accounts = get_accounts()
     if len(accounts) < 2:
@@ -45,8 +49,11 @@ def main() -> None:
     manifest = build(json.loads(INPUT.read_text(encoding="utf-8")))
     fraudulent = manifest["leaves"][1]
 
-    factory = get_contract_factory(contract_file_path="verdictrollup.py")
-    operator_contract = factory.deploy(account=operator, **TX_KW)
+    factory = get_contract_factory(contract_file_path=str(ROOT / "contracts" / "verdictrollup.py"))
+    operator_contract = factory.build_contract(
+        contract_address=args.contract_address,
+        account=operator,
+    )
     print(f"contract={operator_contract.address}")
 
     created = operator_contract.create_batch(
@@ -62,7 +69,8 @@ def main() -> None:
     ).transact(value=OPERATOR_BOND, **TX_KW)
     ok(created, "create_batch")
 
-    before = operator_contract.get_batch([1]).call()
+    batch_id = int(created["consensus_data"]["leader_receipt"][0]["result"]["payload"]["readable"])
+    before = operator_contract.get_batch([batch_id]).call()
     print("batch_before=", json.dumps(before, sort_keys=True))
 
     challenger_contract = factory.build_contract(
@@ -71,7 +79,7 @@ def main() -> None:
     )
     challenged = challenger_contract.challenge_leaf(
         [
-            1,
+            batch_id,
             fraudulent["index"],
             fraudulent["question"],
             fraudulent["context"],
@@ -82,8 +90,9 @@ def main() -> None:
     ).transact(value=CHALLENGER_BOND, **TX_KW)
     ok(challenged, "challenge_leaf")
 
-    after = operator_contract.get_batch([1]).call()
-    challenge = operator_contract.get_challenge([1]).call()
+    after = operator_contract.get_batch([batch_id]).call()
+    challenge_id = int(challenged["consensus_data"]["leader_receipt"][0]["result"]["payload"]["readable"])
+    challenge = operator_contract.get_challenge([challenge_id]).call()
     print("batch_after=", json.dumps(after, sort_keys=True))
     print("challenge=", json.dumps(challenge, sort_keys=True))
 
@@ -93,6 +102,11 @@ def main() -> None:
         raise SystemExit("expected FRAUD_PROVEN for the deliberately false second leaf")
     if challenge["consensus_result"] != "REJECTED":
         raise SystemExit("expected the public fixture to resolve to REJECTED")
+
+    expected_credit = OPERATOR_BOND + CHALLENGER_BOND
+    if int(challenge["payout_credit_wei"]) != expected_credit:
+        raise SystemExit("unexpected challenger payout credit in finalized challenge record")
+    print("challenger_credit_command=", f"genlayer call {operator_contract.address} get_credit --args {challenger.address}")
 
     print("Flagship fraud-proof demo passed.")
 

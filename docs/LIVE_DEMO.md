@@ -48,7 +48,7 @@ genvm-lint check contracts/verdictrollup.py
 gltest tests/integration/ -v -s --network studionet
 ```
 
-Record the deployment transaction(s), contract address, finalized status and state reads in `DEPLOYMENT.md`.
+The observed deployment and lifecycle are recorded in [`STUDIONET_LIVE_EVIDENCE.md`](STUDIONET_LIVE_EVIDENCE.md). The canonical deployed address is `0x0d921292939A28d41d9BE4a304b725dcd3A76af0`.
 
 ## 5. Flagship fraud-proof run
 
@@ -57,7 +57,7 @@ The repository contains one intentionally bad leaf. The second leaf is committed
 Fund/configure two Studionet accounts: one operator and one independent challenger. Then run:
 
 ```bash
-python scripts/live_fraud_demo.py
+python scripts/live_fraud_demo.py --contract-address 0x0d921292939A28d41d9BE4a304b725dcd3A76af0
 ```
 
 The expected lifecycle is:
@@ -105,11 +105,6 @@ Do not shorten hashes in the canonical evidence record.
 
 For a finality proof, build a separate batch whose committed labels match the public fixtures, use a short but valid challenge period, wait until it expires, then call `finalize_batch`.
 
-Prove both of these reads:
+Prove `verify_leaf(...)` before and after finalization, and inspect the finalized batch state. The current Studionet RPC rejects the eight-argument `is_final_leaf(...)` read with an RLP surplus-bytes error; do not claim that live return until the RPC issue is resolved. See [`STUDIONET_LIVE_EVIDENCE.md`](STUDIONET_LIVE_EVIDENCE.md).
 
-```text
-verify_leaf(...)  == true
-is_final_leaf(...) == true
-```
-
-Also show before finalization that membership is already true while `is_final_leaf(...)` remains false. This demonstrates that VerdictRollup does not confuse a Merkle inclusion proof with optimistic finality.
+Direct Mode tests demonstrate membership is true before finality while the batch is OPEN. Live Studionet evidence confirms batch 2 was OPEN at membership readback and later reached FINALIZED after the deadline; its `is_final_leaf` view could not be read through the current RPC call path.
