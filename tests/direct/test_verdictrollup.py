@@ -85,6 +85,14 @@ def mock_label(vm, url_suffix, body, label, evidence=""):
     )
 
 
+def credit_of(contract, account):
+    # The declared view parameter is genlayer Address; Direct Mode fixtures
+    # expose raw bytes, so convert at the Python boundary just as ABI decoding does.
+    from genlayer.py.types import Address
+
+    return int(contract.get_credit(Address(account)))
+
+
 def challenge(vm, contract, batch_id, leaf, sender, value=CHALLENGE_BOND):
     vm.sender = sender
     vm.value = value
@@ -201,7 +209,7 @@ def test_fraud_challenge_invalidates_entire_batch_and_slashes_operator_bond(dire
     assert batch["status_name"] == "INVALIDATED"
     assert batch["bond_remaining_wei"] == 0
     assert batch["successful_challenge_id"] == challenge_id
-    assert int(contract.get_credit(direct_alice)) == OPERATOR_BOND + CHALLENGE_BOND
+    assert credit_of(contract, direct_alice) == OPERATOR_BOND + CHALLENGE_BOND
     assert direct_vm.run_validator() is True
 
 
@@ -217,8 +225,8 @@ def test_correct_leaf_challenge_is_rejected_and_challenger_bond_credits_operator
     assert receipt["outcome_name"] == "REJECTED"
     assert batch["status_name"] == "OPEN"
     assert batch["bond_remaining_wei"] == OPERATOR_BOND
-    assert int(contract.get_credit(direct_owner)) == CHALLENGE_BOND
-    assert int(contract.get_credit(direct_alice)) == 0
+    assert credit_of(contract, direct_owner) == CHALLENGE_BOND
+    assert credit_of(contract, direct_alice) == 0
     assert direct_vm.run_validator() is True
 
 
@@ -232,7 +240,7 @@ def test_unresolved_challenge_refunds_challenger_without_invalidating_batch(dire
 
     assert receipt["outcome_name"] == "INCONCLUSIVE"
     assert contract.get_batch(batch_id)["status_name"] == "OPEN"
-    assert int(contract.get_credit(direct_alice)) == CHALLENGE_BOND
+    assert credit_of(contract, direct_alice) == CHALLENGE_BOND
 
 
 def test_empty_source_is_inconclusive_and_never_fraud(direct_vm, direct_deploy, direct_alice):
@@ -400,7 +408,7 @@ def test_finalize_after_deadline_returns_operator_bond_as_credit(direct_vm, dire
 
     assert batch["status_name"] == "FINALIZED"
     assert batch["bond_remaining_wei"] == 0
-    assert int(contract.get_credit(direct_owner)) == OPERATOR_BOND
+    assert credit_of(contract, direct_owner) == OPERATOR_BOND
     leaf = manifest["leaves"][0]
     assert contract.is_final_leaf(
         batch_id,

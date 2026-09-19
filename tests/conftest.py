@@ -54,6 +54,19 @@ if os.name == "nt":
         os.close(fd)
 
     direct_loader._inject_message_to_fd0 = _inject_message_to_fd0_windows
+
+    # genlayer-test 0.29.2 does not model Event emissions in Direct Mode.
+    # Accept those no-op requests while leaving all other WASI behavior intact.
+    from gltest.direct import wasi_mock
+
+    _handle_gl_call = wasi_mock._handle_gl_call
+
+    def _handle_gl_call_with_events(vm, request):
+        if isinstance(request, dict) and "EmitEvent" in request:
+            return {"ok": None}
+        return _handle_gl_call(vm, request)
+
+    wasi_mock._handle_gl_call = _handle_gl_call_with_events
     _vm_cleanup = VMContext._cleanup_after_deactivate
 
     def _cleanup_vm_message_file(self):

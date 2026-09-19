@@ -188,23 +188,10 @@ def clean_text(value: typing.Any, limit: int) -> str:
 
 
 def message_timestamp() -> int:
-    raw = None
-    message = getattr(gl, "message", None)
-    raw_message = getattr(message, "raw", None)
-    raw = getattr(raw_message, "datetime", None)
-    if raw in (None, ""):
-        mapping = getattr(gl, "message_raw", None)
-        raw = mapping.get("datetime", "") if isinstance(mapping, dict) else ""
-    if isinstance(raw, int):
-        return int(raw)
-    if not isinstance(raw, str) or raw.strip() == "":
-        # Current GenVM also pins datetime.now() to transaction time. The explicit
-        # message path is retained for compatibility with the tested Studio runner.
-        return int(datetime.now(timezone.utc).timestamp())
-    parsed = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return int(parsed.timestamp())
+    # GenVM pins datetime.now() to the current transaction timestamp. It also
+    # works across successive Direct Mode calls, where the older testing-suite
+    # message snapshot is not refreshed after vm.warp().
+    return int(datetime.now(timezone.utc).timestamp())
 
 
 def hash_text(text: str) -> str:
