@@ -128,6 +128,11 @@ class IVerdictRollup:
             proposed_result: str,
             proof_json: str,
         ) -> bool: ...
+        def is_final_leaf_hash(
+            self, batch_id: u256, expected_definition_hash: u256,
+            leaf_hash_value: u256, compact_proof: str,
+        ) -> bool: ...
+
 
     class Write:
         def create_batch(
@@ -444,6 +449,34 @@ def verify_merkle_proof(leaf_hash: str, proof_json: str, expected_root: str) -> 
         else:
             current = hash_parent(current, step["hash"])
     return current == normalize_hash(expected_root)
+
+def uint256_hash(value: u256) -> str:
+    """Render a fixed-width ABI integer as the canonical 32-byte hex hash."""
+    digits = hex(int(value))[2:]
+    return ("0" * (64 - len(digits))) + digits
+
+
+def verify_compact_merkle_proof(
+    leaf_hash_value: u256,
+    compact_proof: str,
+    expected_root: str,
+) -> bool:
+    """Verify concatenated L/R + 32-byte-hex sibling steps (65 chars each)."""
+    encoded = str(compact_proof)
+    if len(encoded) > MAX_PROOF_DEPTH * 65 or len(encoded) % 65 != 0:
+        return False
+    current = uint256_hash(leaf_hash_value)
+    for offset in range(0, len(encoded), 65):
+        side = encoded[offset].upper()
+        sibling = normalize_hash(encoded[offset + 1 : offset + 65])
+        if side == "L":
+            current = hash_parent(sibling, current)
+        elif side == "R":
+            current = hash_parent(current, sibling)
+        else:
+            return False
+    return current == normalize_hash(expected_root)
+
 
 
 def adjudication_prompt(
@@ -1061,6 +1094,27 @@ class VerdictRollup(gl.Contract):
                 leaf["proposed_result"],
             )
             return verify_merkle_proof(leaf_hash_value, proof_json, str(batch.merkle_root))
+        except Exception:
+            return False
+
+    @gl.public.view
+    def is_final_leaf_hash(
+        self,
+        batch_id: u256,
+        expected_definition_hash: u256,
+        leaf_hash_value: u256,
+        compact_proof: str,
+    ) -> bool:
+        """Compact consumer check: finalized batch, pinned definition, committed leaf."""
+        batch = self._batch(batch_id)
+        if int(batch.status) != BATCH_FINALIZED:
+            return False
+        if uint256_hash(expected_definition_hash) != str(batch.definition_hash):
+            return False
+        try:
+            return verify_compact_merkle_proof(
+                leaf_hash_value, compact_proof, str(batch.merkle_root)
+            )
         except Exception:
             return False
 

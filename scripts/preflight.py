@@ -39,6 +39,8 @@ def main() -> None:
     require("withdraw_credit" in contract, "pull-based payout path is present")
     require("operator cannot challenge its own batch" in contract, "operator self-challenge escape is blocked")
     require("is_final_leaf" in contract, "consumers can require optimistic finality plus membership")
+    require("is_final_leaf_hash" in contract, "compact consumer view is present for Studionet RPC compatibility")
+    require("verify_compact_merkle_proof" in contract, "compact consumer still verifies committed Merkle membership")
     require(tests.count("def test_") >= 25, "substantial direct-mode suite is present")
     require("frontend" not in {p.name.lower() for p in ROOT.iterdir()}, "no frontend directory exists")
 

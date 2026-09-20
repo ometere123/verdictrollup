@@ -107,15 +107,7 @@ def test_bonded_batch_commitment_round_trips_on_studionet():
     ).call() is True
 
     # Membership is not optimistic finality while the challenge window is open.
-    assert contract.is_final_leaf(
-        [
-            1,
-            batch["definition_hash"],
-            leaf["index"],
-            leaf["question"],
-            leaf["context"],
-            leaf["source_url"],
-            leaf["proposed_result"],
-            leaf["proof_json"],
-        ]
+    compact_proof = "".join(step["side"] + step["hash"] for step in leaf["proof"])
+    assert contract.is_final_leaf_hash(
+        [1, int(batch["definition_hash"], 16), int(leaf["leaf_hash"], 16), compact_proof]
     ).call() is False

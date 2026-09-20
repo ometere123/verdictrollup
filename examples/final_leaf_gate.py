@@ -11,16 +11,9 @@ from genlayer import *
 @gl.contract_interface
 class IVerdictRollupConsumer:
     class View:
-        def is_final_leaf(
-            self,
-            batch_id: u256,
-            expected_definition_hash: str,
-            leaf_index: u256,
-            question: str,
-            context: str,
-            source_url: str,
-            proposed_result: str,
-            proof_json: str,
+        def is_final_leaf_hash(
+            self, batch_id: u256, expected_definition_hash: u256,
+            leaf_hash_value: u256, compact_proof: str,
         ) -> bool: ...
 
     class Write:
@@ -39,13 +32,9 @@ class FinalLeafGate(gl.Contract):
         self,
         action_hash: str,
         batch_id: u256,
-        expected_definition_hash: str,
-        leaf_index: u256,
-        question: str,
-        context: str,
-        source_url: str,
-        proposed_result: str,
-        proof_json: str,
+        expected_definition_hash: u256,
+        leaf_hash_value: u256,
+        compact_proof: str,
     ) -> None:
         key = str(action_hash).strip().lower()
         if len(key) != 64 or any(c not in "0123456789abcdef" for c in key):
@@ -54,15 +43,11 @@ class FinalLeafGate(gl.Contract):
             raise gl.vm.UserError("EXPECTED: action already consumed")
 
         rollup = IVerdictRollupConsumer(self.rollup_address)
-        if not rollup.view().is_final_leaf(
+        if not rollup.view().is_final_leaf_hash(
             batch_id,
             expected_definition_hash,
-            leaf_index,
-            question,
-            context,
-            source_url,
-            proposed_result,
-            proof_json,
+            leaf_hash_value,
+            compact_proof,
         ):
             raise gl.vm.UserError("EXPECTED: rollup leaf is not finalized and valid")
         self.consumed[key] = True

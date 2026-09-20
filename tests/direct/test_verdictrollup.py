@@ -435,6 +435,53 @@ def test_final_leaf_requires_exact_batch_definition_hash(direct_vm, direct_deplo
     ) is False
 
 
+def compact_proof_for(leaf):
+    return "".join(step["side"] + step["hash"] for step in leaf["proof"])
+
+
+def test_compact_final_leaf_hash_requires_finality_definition_and_membership(
+    direct_vm, direct_deploy
+):
+    contract, batch_id, manifest = create_batch(direct_vm, direct_deploy)
+    batch = contract.get_batch(batch_id)
+    leaf = manifest["leaves"][1]
+    args = (
+        batch_id,
+        int(batch["definition_hash"], 16),
+        int(leaf["leaf_hash"], 16),
+        compact_proof_for(leaf),
+    )
+
+    assert contract.is_final_leaf_hash(*args) is False
+    direct_vm.warp(AFTER_ISO)
+    contract.finalize_batch(batch_id)
+    assert contract.is_final_leaf_hash(*args) is True
+    assert contract.is_final_leaf_hash(
+        batch_id, int("00" * 32, 16), args[2], args[3]
+    ) is False
+    assert contract.is_final_leaf_hash(
+        batch_id, args[1], int("00" * 32, 16), args[3]
+    ) is False
+    assert contract.is_final_leaf_hash(
+        batch_id, args[1], args[2], "L" + ("00" * 32)
+    ) is False
+
+
+def test_compact_final_leaf_hash_rejects_malformed_or_oversized_proof(
+    direct_vm, direct_deploy
+):
+    contract, batch_id, manifest = create_batch(direct_vm, direct_deploy)
+    batch = contract.get_batch(batch_id)
+    leaf = manifest["leaves"][0]
+    direct_vm.warp(AFTER_ISO)
+    contract.finalize_batch(batch_id)
+    common = (batch_id, int(batch["definition_hash"], 16), int(leaf["leaf_hash"], 16))
+
+    assert contract.is_final_leaf_hash(*common, "L" + ("0" * 63)) is False
+    assert contract.is_final_leaf_hash(*common, "X" + ("0" * 64)) is False
+    assert contract.is_final_leaf_hash(*common, "R" * (65 * 33)) is False
+
+
 def test_merkle_membership_alone_is_not_finality(direct_vm, direct_deploy):
     contract, batch_id, manifest = create_batch(direct_vm, direct_deploy)
     leaf = manifest["leaves"][0]
@@ -446,6 +493,13 @@ def test_merkle_membership_alone_is_not_finality(direct_vm, direct_deploy):
     assert contract.is_final_leaf(
         batch_id, batch["definition_hash"], leaf["index"], leaf["question"], leaf["context"],
         leaf["source_url"], leaf["proposed_result"], leaf["proof_json"],
+    ) is False
+    compact = compact_proof_for(leaf)
+    assert contract.is_final_leaf_hash(
+        batch_id,
+        int(batch["definition_hash"], 16),
+        int(leaf["leaf_hash"], 16),
+        compact,
     ) is False
 
 
