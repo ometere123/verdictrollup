@@ -10,9 +10,15 @@ import time
 from gltest import get_contract_factory, get_default_account
 from gltest.assertions import tx_execution_succeeded
 from gltest.types import TransactionStatus
+from gltest_cli.config.general import get_general_config
+from gltest_cli.config.user import load_user_config
 
-from scripts.build_batch import build
-from scripts.check_network import main as check_studionet
+try:
+    from scripts.build_batch import build
+    from scripts.check_network import main as check_studionet
+except ImportError:
+    from build_batch import build
+    from check_network import main as check_studionet
 
 
 CONTRACT = "verdictrollup.py"
@@ -50,6 +56,8 @@ def main() -> None:
 
     # Fail closed before the first write; this script is Studionet-only.
     check_studionet()
+    # Standalone invocation does not run pytest's gltest config plugin.
+    get_general_config().user_config = load_user_config("gltest.config.yaml")
     account = get_default_account()
     factory = get_contract_factory(contract_file_path=CONTRACT)
     contract = factory.build_contract(args.contract_address, account=account)

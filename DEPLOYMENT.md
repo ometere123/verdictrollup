@@ -1,100 +1,59 @@
-# VerdictRollup — stable Studionet deployment evidence
+# VerdictRollup — Studionet deployment and live evidence
 
-> **Current observed live evidence is recorded in [`docs/STUDIONET_LIVE_EVIDENCE.md`](docs/STUDIONET_LIVE_EVIDENCE.md).** The blank fields and "no live deployment" text later in this file are the original pre-deployment template and are superseded by that record. The live contract was deployed on Studionet 61999; this evidence adds no contract changes or redeployment.
-
-Current canonical contract: [`0x0d921292939A28d41d9BE4a304b725dcd3A76af0`](https://explorer-studio.genlayer.com/address/0x0d921292939A28d41d9BE4a304b725dcd3A76af0). Deployment: [`0x64703c09a112f4c4ab447397898bac78b1af6789ce802e94ede04b33784638f1`](https://explorer-studio.genlayer.com/tx/0x64703c09a112f4c4ab447397898bac78b1af6789ce802e94ede04b33784638f1), finalized with successful execution.
-
-The live fraud proof and honest finalization were also verified. The eight-argument `is_final_leaf` read currently fails at the RPC with an RLP surplus-bytes error; see the linked record. Do not infer or claim a successful live return from the batch state alone.
-
-
-## Canonical target
+## Canonical deployment
 
 - Network: GenLayer Studionet
 - Chain ID: `61999`
 - RPC: `https://studio.genlayer.com/api`
-- Explorer: `https://explorer-studio.genlayer.com/`
-- Contract: `contracts/verdictrollup.py`
+- Explorer: `https://explorer-studio.genlayer.com`
+- Contract: [`0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa`](https://explorer-studio.genlayer.com/address/0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa)
+- Deployment transaction: [`0x5d3c414c0df994ca573bb7984a004d72b9a68bb7b3e37ef0062c7109bf36654`](https://explorer-studio.genlayer.com/tx/0x5d3c414c0df994ca573bb7984a004d72b9a68bb7b3e37ef0062c7109bf36654)
+- Result: `FINALIZED / MAJORITY_AGREE / SUCCESS`
+- Source commit: `84769eb44cdb567d103247645b8ecedeb05e2203`
+- Deployed source: 40,650 bytes; SHA-256 `6b047e8aebf8ce3b077c22776ad4fe616c0da6f763ba2b364e0ca06ba1af6c69`
+- CLI: GenLayer CLI `0.39.1`; local executable; RPC chain ID independently checked before deployment.
 
-## Evidence status
+## Live compact finality-consumer proof
 
-**Superseded:** this pre-deployment template is retained for historical context only. The live values are in `docs/STUDIONET_LIVE_EVIDENCE.md`.
+The old full-preimage `is_final_leaf` view remains in the contract. A compact public consumer view, `is_final_leaf_hash(batch_id, expected_definition_hash, leaf_hash, compact_proof)`, was added without changing storage or protocol transitions. It requires the batch to be `FINALIZED`, pins the stored definition hash, and verifies the committed leaf hash against the stored Merkle root using a bounded compact sibling proof. A consumer that needs the original leaf fields can separately validate their preimage against `leaf_hash`.
 
-Historical note: this paragraph described the pre-deployment environment only. The contract has since been deployed and the verified evidence is in `docs/STUDIONET_LIVE_EVIDENCE.md`; live signing and Studionet access were used for the evidence collected there.
+A separate honest two-leaf batch was created and finalized on this deployment:
 
-The following blank fields are historical template fields and are not current deployment evidence.
+| Action | Transaction | Final result |
+|---|---|---|
+| Create/bond batch 1 | [`0x5c11e112bf2c5b49faac98efb4cb7cae377093e2b475b8e4843fb995e15af59a`](https://explorer-studio.genlayer.com/tx/0x5c11e112bf2c5b49faac98efb4cb7cae377093e2b475b8e4843fb995e15af59a) | `FINALIZED / MAJORITY_AGREE / SUCCESS`; batch `OPEN`; operator bond 2,000; challenge bond 1,000; challenge period 60 seconds |
+| Finalize after challenge window | [`0xcd248150bce940966a339d326704f080c72406f74ab041c98bc5c63acada23`](https://explorer-studio.genlayer.com/tx/0xcd248150bce940966a339d326704f080c72406f74ab041c98bc5c63acada23) | `FINALIZED / MAJORITY_AGREE / SUCCESS`; batch state read back as `FINALIZED` |
 
-## Historical deployment record template
+Readback for batch `1`:
 
-```text
-Repository commit:
-Contract SHA-256:
-Deployer:
-Contract address:
-Deployment transaction:
-Deployment UTC:
-Deployment status:
-Execution result:
-```
+- Definition hash: `c1954a03d35c048528df8036bac0601f37c8a0fc8daf47a737a01f3026fc8f2b`
+- Merkle root: `29cfb78d4001646327aa91bf4e90bd290d283095f2cac017c41fa1fca155c36d`
+- Tested leaf hash: `08fb0400904570543ad27423c13cdca93a7abbd41ddb6a0f4ae2feeee984a7ef`
+- While `OPEN`: `verify_leaf == true`; compact finality view `== false`.
+- After finalization: compact finality view with the committed definition and proof `== true`.
+- Wrong definition hash: `false`; nonmember leaf hash: `false`.
+- Both writes returned `FINALIZED / MAJORITY_AGREE / SUCCESS`; the live runner observed the state and view results above.
 
-Verification requirement: record the same complete contract source hash that was deployed and verify the transaction's execution result, not only its outer/finalized status.
+The batch transaction carried a 2,000-unit protocol bond; this is not a transaction-fee figure. The RPC/CLI receipt path did not provide a reliable settled fee-consumed/refund breakdown, so none is claimed here. A temporary demo signer was funded with 0.0001 GEN for the run; transfer tx: `0x9b0c3f31013cd65a6c2c64900be696f074fcab37b3cd4520b35b519cdb2f5d89`.
 
-## Historical flagship fraud-proof record template
+## RLP issue investigation
 
-The canonical demo manifest root is:
+The failure is payload-size-dependent, not simply caused by the eight-argument arity or one uniquely bad dynamic parameter. Short eight-argument calls to the old view decoded and returned `false`; a seven-argument membership call with short data also worked. Increasing dynamic calldata (including the `context` string) crossed a threshold and produced RLP surplus-byte / undersized-list errors. Explicitly passing `proof_json` as a string did not remove the failure. CLI and Python SDK calls exhibited the same class of error on Studionet. The available evidence localizes this to the live RPC/transaction decoding path for larger dynamic payloads; it does not establish whether the precise defect is in RPC RLP framing or the downstream GenVM ABI decoder.
 
-```text
-e46676e2a49441e0c702a964cd9537249f44bf73cea92d1765620ef533faccc5
-```
+The compact interface removes repeated dynamic leaf preimage fields from the live consumer call while preserving definition pinning and Merkle-root membership.
 
-The second leaf is intentionally committed as `APPROVED` while the public source states `REJECTED`.
+## Historical deployment and lifecycle
 
-```text
-Batch ID:
-Batch definition hash:
-Create-batch transaction:
-Challenge ID:
-Challenger:
-Challenge transaction:
-Committed result: APPROVED
-Consensus result:
-Challenge outcome:
-Final batch status:
-Challenger credit:
-```
+The earlier deployment remains documented, not erased: [`docs/STUDIONET_LIVE_EVIDENCE.md`](docs/STUDIONET_LIVE_EVIDENCE.md) preserves its deployment, fraud-proof challenge, honest-batch evidence and the original RLP failure. That deployment is superseded for current consumer integration by the compact-view deployment above. Its fraud-proof lifecycle remains valid historical evidence for the earlier contract address; it is not attributed to this new address.
 
-The expected proof is `consensus result == REJECTED`, `challenge outcome == FRAUD_PROVEN`, and `batch status == INVALIDATED`. Record those values only after the live state reads confirm them.
-
-## Historical honest-finality record template
-
-Create a separate all-correct batch and record:
-
-```text
-Batch ID:
-Definition hash:
-Merkle root:
-Finalize transaction:
-Final status:
-verify_leaf after finalization:
-is_final_leaf with correct definition hash:
-is_final_leaf with wrong definition hash:
-```
-
-## Commands
+## Reproduction
 
 ```bash
 python scripts/check_network.py
 python scripts/preflight.py
 python scripts/merkle.py
 python scripts/verify_manifest.py fixtures/demo_batch_manifest.json
-pytest tests/direct -v
-genvm-lint check contracts/verdictrollup.py
-gltest tests/integration/ -v -s --network studionet
+python -m pytest tests/direct -v
+GENVM_VERSION=v0.2.16 genvm-lint check contracts/verdictrollup.py
+python scripts/live_finality_demo.py --contract-address 0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa
 ```
-
-For the two-account fraud lifecycle:
-
-```bash
-python scripts/live_fraud_demo.py
-```
-
-See `docs/LIVE_DEMO.md` for the exact evidence-capture path.

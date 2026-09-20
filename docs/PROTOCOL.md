@@ -121,8 +121,8 @@ This is substantive re-adjudication, not JSON-format validation.
 
 > this canonical leaf is in this batch's committed root.
 
-`is_final_leaf(...) == true` means:
+`is_final_leaf(...) == true` means (the full-preimage interface):
 
 > this canonical leaf is in the committed root, the batch survived its challenge protocol and finalized, and the caller supplied the exact frozen batch definition hash.
 
-Consumer contracts that depend on optimistic finality should use the latter.
+The compact live-consumer interface `is_final_leaf_hash(batch_id, expected_definition_hash, leaf_hash, compact_proof)` proves the same finality boundary for the committed leaf hash: the batch must be FINALIZED, the expected definition hash must match, and the Merkle proof must reach the stored root. A consumer that relies on the supplied leaf fields must also ensure their canonical leaf hash matches `leaf_hash`.

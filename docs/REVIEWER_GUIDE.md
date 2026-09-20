@@ -20,7 +20,7 @@ Start with these functions in `contracts/verdictrollup.py`:
 - `verify_merkle_proof`
 - `challenge_leaf`
 - `finalize_batch`
-- `is_final_leaf`
+- `is_final_leaf` and compact `is_final_leaf_hash`
 - `withdraw_credit`
 
 The economic state machine does not depend on LLM prose.
@@ -54,6 +54,6 @@ The direct suite explicitly tests that:
 - a fraud proof invalidates the entire batch;
 - an invalidated batch cannot finalize;
 - an open batch may prove membership but not finality;
-- a wrong batch definition hash cannot satisfy `is_final_leaf`.
+- a wrong batch definition hash cannot satisfy either finality interface; compact `is_final_leaf_hash` is the live-verified consumer route.
 
 Run `python scripts/preflight.py` for a dependency-free structural audit.

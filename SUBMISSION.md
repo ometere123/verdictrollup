@@ -45,7 +45,7 @@ The contract, not the model, controls:
 
 A producer can use `scripts/build_batch.py` to build a canonical manifest and proofs without third-party crypto dependencies.
 
-A consumer can call `is_final_leaf(...)` and pin the batch `definition_hash` so it depends on both the exact leaf and the exact economic security envelope. `examples/final_leaf_gate.py` shows the minimal downstream pattern.
+A consumer can call `is_final_leaf_hash(batch_id, expected_definition_hash, leaf_hash, compact_proof)` to require the frozen definition, Merkle membership and `FINALIZED` state. If consumer logic relies on leaf fields, it must also verify their canonical hash equals `leaf_hash`. `examples/final_leaf_gate.py` shows the compact downstream pattern.
 
 ## Reviewer path
 
@@ -62,6 +62,6 @@ Submission target: stable GenLayer Studionet, chain ID `61999`, RPC `https://stu
 
 ## Current evidence status
 
-The contract is live on Studionet 61999. A real bonded adversarial challenge finalized as `FRAUD_PROVEN`, invalidated its batch, and credited the independent challenger. A separate honest batch finalized after its challenge period; membership was verified both before and after finalization. Exact deployment, challenge, finalization transactions and readbacks are in [`docs/STUDIONET_LIVE_EVIDENCE.md`](docs/STUDIONET_LIVE_EVIDENCE.md).
+The current canonical contract is live at [`0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa`](https://explorer-studio.genlayer.com/address/0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa) on Studionet `61999`. An honest batch on this deployment proved membership while open and non-finality before expiry, then compact finality after `FINALIZED`, including rejection of a wrong definition hash and nonmember leaf hash. The earlier bonded fraud lifecycle remains historical evidence for the prior deployment in [`docs/STUDIONET_LIVE_EVIDENCE.md`](docs/STUDIONET_LIVE_EVIDENCE.md).
 
-The live RPC currently fails when reading the eight-argument `is_final_leaf` view with an RLP surplus-bytes error. Accordingly, the live `is_final_leaf == true` result is not claimed. See the evidence record for detail.
+The full-preimage read issue is payload-size-sensitive; the compact `is_final_leaf_hash` view provides the proven live consumer path without repeating dynamic preimage fields. See the RLP investigation and new deployment evidence in the live record.

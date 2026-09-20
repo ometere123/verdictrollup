@@ -59,7 +59,7 @@ batch finalized
 consumer proves individual leaf membership
 ```
 
-The important distinction is that **a Merkle proof establishes membership, not truth or finality**. `verify_leaf(...)` can succeed while a batch is still open. A downstream contract that wants an economically finalized result should use `is_final_leaf(...)`, which requires:
+The important distinction is that **a Merkle proof establishes membership, not truth or finality**. `verify_leaf(...)` can succeed while a batch is still open. A downstream contract can use `is_final_leaf_hash(batch_id, expected_definition_hash, leaf_hash, compact_proof)` for a compact live-consumer check. It requires:
 
 1. the batch to be `FINALIZED`;
 2. the caller to pin the exact batch `definition_hash`; and
@@ -114,7 +114,7 @@ That makes the primitive conservative and easy for consumers to reason about:
 ```text
 OPEN         -> individual membership is provable, finality is false
 INVALIDATED  -> no leaf can become final
-FINALIZED    -> membership + pinned definition hash can satisfy is_final_leaf
+FINALIZED    -> compact proof + pinned definition hash satisfy is_final_leaf_hash
 ```
 
 There is no partial patching of a fraudulent root. The operator must publish a new corrected batch with a new root and new bond.
@@ -198,7 +198,7 @@ Consumers should pin this hash rather than only a batch ID. Two economically dif
 
 `verify_leaf(...)` — verifies Merkle membership only.
 
-`is_final_leaf(...)` — verifies finalized batch state, pinned definition hash and Merkle membership together.
+`is_final_leaf_hash(...)` — compact finality consumer: finalized batch state, pinned definition hash and Merkle proof over the committed leaf hash. Validate the leaf preimage against that hash when your consumer relies on the supplied leaf fields.
 
 `get_batch(...)`, `get_challenge(...)`, `get_credit(...)`, `get_status_dictionary()` — reviewer/consumer state reads.
 
@@ -303,8 +303,8 @@ VerdictRollup is an optimistic semantic decision primitive. It is not a generic 
 
 ## Live Studionet evidence
 
-The canonical deployment and live batch/challenge readbacks are recorded in [docs/STUDIONET_LIVE_EVIDENCE.md](docs/STUDIONET_LIVE_EVIDENCE.md). The contract is deployed on Studionet chain `61999` at [`0x0d921292939A28d41d9BE4a304b725dcd3A76af0`](https://explorer-studio.genlayer.com/address/0x0d921292939A28d41d9BE4a304b725dcd3A76af0). The demo proves a finalized `FRAUD_PROVEN` challenge invalidates batch 1 and credits the challenger, and an honest batch 2 reaches `FINALIZED` after its challenge window.
+The current canonical contract is deployed on Studionet chain `61999` at [`0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa`](https://explorer-studio.genlayer.com/address/0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa). Live evidence proves membership while the batch is open but not finality, then proves the compact `is_final_leaf_hash` consumer check after finalization with the exact definition hash. The prior deployment fraud lifecycle remains documented as historical evidence in [docs/STUDIONET_LIVE_EVIDENCE.md](docs/STUDIONET_LIVE_EVIDENCE.md).
 
-**Live-read limitation:** the current Studionet RPC rejects the eight-argument `is_final_leaf` view with an RLP surplus-bytes error through both CLI and Python SDK. This return is not claimed as live evidence; details and successful adjacent readbacks are documented in the evidence record.
+**Compatibility note:** larger dynamic arguments to the legacy full-preimage view can trigger a payload-size-sensitive RLP decoding error on Studionet. The compact consumer path is deployed and has a successful live read proving definition pinning and Merkle membership after `FINALIZED`; the exact failing decoder layer could not be isolated further.
 
 No frontend has been added.

@@ -48,9 +48,9 @@ genvm-lint check contracts/verdictrollup.py
 gltest tests/integration/ -v -s --network studionet
 ```
 
-The observed deployment and lifecycle are recorded in [`STUDIONET_LIVE_EVIDENCE.md`](STUDIONET_LIVE_EVIDENCE.md). The canonical deployed address is `0x0d921292939A28d41d9BE4a304b725dcd3A76af0`.
+The original fraud-proof lifecycle below is historical evidence for `0x0d921292939A28d41d9BE4a304b725dcd3A76af0`. The current canonical deployment is `0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa`; its successful compact finality-consumer proof is recorded in [`../DEPLOYMENT.md`](../DEPLOYMENT.md) and [`STUDIONET_LIVE_EVIDENCE.md`](STUDIONET_LIVE_EVIDENCE.md).
 
-## 5. Flagship fraud-proof run
+## 5. Historical flagship fraud-proof run
 
 The repository contains one intentionally bad leaf. The second leaf is committed as `APPROVED`, while its public source file says the release is `REJECTED`.
 
@@ -101,10 +101,10 @@ Capture, in full:
 
 Do not shorten hashes in the canonical evidence record.
 
-## 6. Optional honest-batch finality run
+## 6. Current compact honest-batch finality proof
 
-For a finality proof, build a separate batch whose committed labels match the public fixtures, use a short but valid challenge period, wait until it expires, then call `finalize_batch`.
+The live compact finality proof on the current canonical deployment was run with `python scripts/live_finality_demo.py --contract-address 0x87467736FD4243B4c927a0a8CC446Eb266FD6AEa`. It creates an honest two-leaf batch, reads membership and compact non-finality while OPEN, waits past the challenge deadline, finalizes, then proves the definition-pinned leaf hash check returns true.
 
-Prove `verify_leaf(...)` before and after finalization, and inspect the finalized batch state. The current Studionet RPC rejects the eight-argument `is_final_leaf(...)` read with an RLP surplus-bytes error; do not claim that live return until the RPC issue is resolved. See [`STUDIONET_LIVE_EVIDENCE.md`](STUDIONET_LIVE_EVIDENCE.md).
+The compact consumer checks the finalized state, pinned definition hash, and a compact Merkle proof over the committed leaf hash. Wrong definition hashes and a nonmember leaf hash return false. The full-preimage view remains available, but its larger dynamic payload can hit the documented Studionet RLP decoding limitation; use the compact method for this consumer path.
 
-Direct Mode tests demonstrate membership is true before finality while the batch is OPEN. Live Studionet evidence confirms batch 2 was OPEN at membership readback and later reached FINALIZED after the deadline; its `is_final_leaf` view could not be read through the current RPC call path.
+Direct Mode and the live Studionet proof both demonstrate that membership can be true while the batch is OPEN but finality remains false until the challenge window closes and the batch reaches FINALIZED.
